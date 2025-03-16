@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Pulse - Your Location-Based Political News</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .search-container {
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: none;
+        }
+        
+        .location-display {
+            font-size: 0.9rem;
+            color: var(--light-color);
+        }
+        
+        .news-categories {
+            display: flex;
+            background-color: var(--dark-color);
+            padding: 0.5rem 1rem;
+        }
+        
+        .category {
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .category.active {
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        .news-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+        
+        .news-section {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .news-list {
+            list-style: none;
+        }
+        
+        .news-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+        
+        .news-image {
+            width: 100px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 1rem;
+            border-radius: 4px;
+        }
+        
+        .news-content h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .news-source {
+            font-size: 0.8rem;
+            color: #777;
+            margin-bottom: 0.5rem;
+        }
+        
+        .news-date {
+            font-size: 0.8rem;
+            color: #777;
+        }
+        
+        .loader {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-message {
+            color: var(--secondary-color);
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .info-message {
+            text-align: center;
+            padding: 1rem;
+            color: #666;
+        }
+        
+        @media (min-width: 768px) {
+            .news-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .preferences-button {
+            margin-left: 10px;
+        }
+
+        .preferences-button button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-patterns-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .search-patterns-list li {
+            padding: 5px 10px;
+            background-color: var(--light-color);
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .search-frequency {
+            color: var(--secondary-color);
+            font-weight: bold;  
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Political Pulse</div>
+                <div class="search-container">
+                    <input type="text" class="search-box" placeholder="Search political news...">
+                </div>
+                <div class="location-display">Loading location...</div>
+                <div class="preferences-button">
+                    <button id="open-preferences">🔍 Search History</button>
+                </div>
+            </div>
+        </div>
+        <div class="news-categories container">
+            <div class="category active" data-category="all">All</div>
+            <div class="category" data-category="global">Global</div>
+            <div class="category" data-category="country">Country</div>
+            <div class="category" data-category="state">State</div>
+            <div class="category" data-category="local">Local</div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="news-container">
+            <div class="news-section" id="global-news">
+                <div class="section-header">Global Political News</div>
+                <ul class="news-list" id="global-news-list">
+                    <div class="loader">Loading global news...</div>
+                </ul>
+            </div>
+            
+            <div class="news-section" id="country-news">
+                <div class="section-header">Country Political News</div>
+                <ul class="news-list" id="country-news-list">
+                    <div class="loader">Loading country news...</div>
+                </ul>
+            </div>
+            
+            <div class="news-section" id="state-news">
+                <div class="section-header">State Political News</div>
+                <ul class="news-list" id="state-news-list">
+                    <div class="loader">Loading state news...</div>
+                </ul>
+            </div>
+            
+            <div class="news-section" id="local-news">
+                <div class="section-header">Local Political News</div>
+                <ul class="news-list" id="local-news-list">
+                    <div class="loader">Loading local news...</div>
+                </ul>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>© 2025 Political Pulse. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Preferences Modal -->
+    <div id="preferences-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Your Search Preferences</h2>
+            <div class="preference-section">
+                <h3>Your Search Patterns</h3>
+                <div id="search-patterns"></div>
+                <button id="clear-search-history">Clear Search History</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const API_KEY = '4e79c171d5404e0c9598a6ad42b2fef0'; //API key
+        const NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything';
+        const GNEWS_API_ENDPOINT = 'https://gnews.io/api/v4/search';
+        const GNEWS_API_KEY = '20c8696106cfd43aa06abcb25589ccfb'; // Alternative API
+        
+        // User preferences (would be stored in localStorage or database)
+        let userPreferences = {
+            searchHistory: [],             // Plain search history list
+            searchFrequency: {},           // Count how often terms are searched
+            preferredTopics: ['politics', 'election', 'government'],
+            lastSearchDate: new Date().toISOString()
+        };
+
+        // User location information
+        let userLocation = {
+            country: '',
+            state: '',
+            city: '',
+            countryCode: ''
+        };
+        
+        // DOM elements
+        const locationDisplay = document.querySelector('.location-display');
+        const searchBox = document.querySelector('.search-box');
+        const categoryButtons = document.querySelectorAll('.category');
+        
+        // News section elements
+        const globalNewsList = document.getElementById('global-news-list');
+        const countryNewsList = document.getElementById('country-news-list');
+        const stateNewsList = document.getElementById('state-news-list');
+        const localNewsList = document.getElementById('local-news-list');
+
+        // Save user preferences to localStorage
+        function saveUserPreferences() {
+            localStorage.setItem('politicalPulsePreferences', JSON.stringify(userPreferences));
+        }
+
+        // Load user preferences from localStorage
+        function loadUserPreferences() {
+            const savedPrefs = localStorage.getItem('politicalPulsePreferences');
+            if (savedPrefs) {
+                userPreferences = JSON.parse(savedPrefs);
+            }
+        }
+
+        // Get top N most searched terms with minimum frequency
+        function getTopSearchTerms(count, minFrequency) {
+            // Sort terms by frequency
+            const terms = Object.keys(userPreferences.searchFrequency || {})
+                .filter(term => userPreferences.searchFrequency[term] >= minFrequency)
+                .sort((a, b) => userPreferences.searchFrequency[b] - userPreferences.searchFrequency[a])
+                .slice(0, count);
+                
+            return terms;
+        }
+
+        // Decay search frequency over time
+        function decaySearchFrequency() {
+            const now = new Date();
+            const lastSearch = new Date(userPreferences.lastSearchDate);
+            const daysSinceLastSearch = (now - lastSearch) / (1000 * 60 * 60 * 24);
+            
+            // Only decay if it's been at least 7 days
+            if (daysSinceLastSearch >= 7) {
+                Object.keys(userPreferences.searchFrequency).forEach(term => {
+                    // Decay by 10% per week
+                    userPreferences.searchFrequency[term] *= 0.9;
+                    
+                    // Remove if frequency gets too low
+                    if (userPreferences.searchFrequency[term] < 0.5) {
+                        delete userPreferences.searchFrequency[term];
+                    }
+                });
+                
+                userPreferences.lastSearchDate = now.toISOString();
+                saveUserPreferences();
+            }
+        }
+
+        // Display search patterns in the modal
+        function displaySearchPatterns() {
+            const patternsDiv = document.getElementById('search-patterns');
+            patternsDiv.innerHTML = '';
+            
+            const terms = Object.keys(userPreferences.searchFrequency || {})
+                .sort((a, b) => userPreferences.searchFrequency[b] - userPreferences.searchFrequency[a]);
+            
+            if (terms.length === 0) {
+                patternsDiv.innerHTML = '<p>No search history yet</p>';
+                return;
+            }
+            
+            const list = document.createElement('ul');
+            list.className = 'search-patterns-list';
+            
+            terms.forEach(term => {
+                const li = document.createElement('li');
+                const frequency = Math.round(userPreferences.searchFrequency[term] * 10) / 10;
+                li.innerHTML = `${term} <span class="search-frequency">(${frequency})</span>`;
+                list.appendChild(li);
+            });
+            
+            patternsDiv.appendChild(list);
+        }
+
+        // Setup preferences modal event listeners
+        function setupPreferencesModal() {
+            const modal = document.getElementById('preferences-modal');
+            const openBtn = document.getElementById('open-preferences');
+            const closeBtn = document.querySelector('.close');
+            const clearBtn = document.getElementById('clear-search-history');
+            
+            openBtn.addEventListener('click', () => {
+                displaySearchPatterns();
+                modal.style.display = 'block';
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                userPreferences.searchFrequency = {};
+                userPreferences.searchHistory = [];
+                saveUserPreferences();
+                displaySearchPatterns();
+            });
+        }
+        
+        // Initialize the app
+        async function initApp() {
+    try {
+        loadUserPreferences();
+        decaySearchFrequency();
+        
+        // Show loading state
+        document.querySelectorAll('.news-list').forEach(list => {
+            list.innerHTML = '<div class="loader">Determining your location...</div>';
+        });
+        
+        // Get location first
+        await getUserLocation();
+        
+        // Once we have location, fetch the news
+        fetchAllNews();
+        setupEventListeners();
+        setupPreferencesModal();
+    } catch (error) {
+        console.error("Error initializing app:", error);
+        locationDisplay.textContent = 'Location unavailable';
+        
+        // Still try to fetch news with default location
+        fetchAllNews();
+        setupEventListeners();
+        setupPreferencesModal();
+    }
+}
+        
+        // Get user location using geolocation API
+        async function getUserLocation() {
+    locationDisplay.textContent = 'Detecting your location...';
+    
+    try {
+        // browser geolocation API 
+        const position = await new Promise((resolve, reject) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    timeout: 10000,
+                    maximumAge: 600000
+                });
+            } else {
+                reject(new Error('Geolocation not supported'));
+            }
+        });
+
+        const { latitude, longitude } = position.coords;
+        
+        // Use reverse geocoding to get detailed location
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
+        const data = await response.json();
+        
+        console.log("Geocoding data:", data);
+        
+        userLocation = {
+            country: data.address.country || 'Unknown Country',
+            countryCode: data.address.country_code?.toUpperCase() || 'US',
+            state: data.address.state || data.address.region || data.address.county || 'Unknown State',
+            city: data.address.city || data.address.town || data.address.village || data.address.suburb || 'Unknown City'
+        };
+    } catch (error) {
+        console.warn("Browser geolocation failed:", error);
+        
+        try {
+            // Fallback to IP-based location
+            locationDisplay.textContent = 'Using IP-based location...';
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            
+            console.log("IP location data:", data);
+            
+            userLocation = {
+                country: data.country_name || 'Unknown Country',
+                countryCode: data.country_code?.toUpperCase() || 'US',
+                state: data.region || 'Unknown State',
+                city: data.city || 'Unknown City'
+            };
+        } catch (ipError) {
+            console.error("IP geolocation also failed:", ipError);
+            // Last resort fallback
+            userLocation = {
+                country: 'India',
+                countryCode: 'IN',
+                state: 'Karnataka',
+                city: 'Bengaluru'
+            };
+        }
+    }
+
+    if (userLocation.country === 'India' && 
+        userLocation.state === 'Karnataka' && 
+        (userLocation.city === 'Unknown City' || !userLocation.city)) {
+        userLocation.city = 'Bengaluru';
+    }
+    
+    locationDisplay.textContent = `${userLocation.city}, ${userLocation.state}, ${userLocation.country}`;
+    console.log("Final location:", userLocation);
+    
+    // Update section headers to reflect location
+    document.querySelector('#country-news .section-header').textContent = 
+        `${userLocation.country} Political News`;
+    document.querySelector('#state-news .section-header').textContent = 
+        `${userLocation.state} Political News`;
+    document.querySelector('#local-news .section-header').textContent = 
+        `${userLocation.city} Political News`;
+        
+        return userLocation;
+    }
+    
+        
+        // Fetch news for all sections
+        function fetchAllNews() {
+            fetchGlobalNews();
+            fetchCountryNews();
+            fetchStateNews();
+            fetchLocalNews();
+        }
+        
+        // Fetch global political news
+        async function fetchGlobalNews() {
+            try {
+                globalNewsList.innerHTML = '<div class="loader">Loading global news...</div>';
+                
+                const params = new URLSearchParams({
+                    q: 'politics OR election OR government',
+                    language: 'en',
+                    sortBy: 'publishedAt',
+                    pageSize: 5,
+                    apiKey: API_KEY
+                });
+                
+                const response = await fetch(`${NEWS_API_ENDPOINT}?${params}`);
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    displayNews(globalNewsList, data.articles);
+                } else {
+                    // Try alternative API
+                    await fetchAlternativeGlobalNews();
+                }
+            } catch (error) {
+                console.error("Error fetching global news:", error);
+                await fetchAlternativeGlobalNews();
+            }
+        }
+        
+        // Fetch alternative global news using GNews API
+        async function fetchAlternativeGlobalNews() {
+            try {
+                const params = new URLSearchParams({
+                    q: 'politics',
+                    lang: 'en',
+                    max: 5,
+                    token: GNEWS_API_KEY
+                });
+                
+                const response = await fetch(`${GNEWS_API_ENDPOINT}?${params}`);
+                const data = await response.json();
+                
+                if (data.articles && data.articles.length > 0) {
+                    displayNews(globalNewsList, data.articles);
+                } else {
+                    globalNewsList.innerHTML = '<div class="error-message">Could not load global news</div>';
+                }
+            } catch (error) {
+                console.error("Error fetching alternative global news:", error);
+                globalNewsList.innerHTML = '<div class="error-message">Could not load global news</div>';
+            }
+        }
+        
+        // Fetch country-specific political news
+        async function fetchCountryNews() {
+    try {
+        countryNewsList.innerHTML = '<div class="loader">Loading country news...</div>';
+        
+        // Better query construction with parentheses for clarity
+        const params = new URLSearchParams({
+            q: `(politics OR election OR government) AND "${userLocation.country}"`,
+            language: 'en',
+            sortBy: 'publishedAt',
+            pageSize: 5,  // Request more to increase chances of relevant results
+            apiKey: API_KEY
+        });
+        
+        const response = await fetch(`${NEWS_API_ENDPOINT}?${params}`);
+        const data = await response.json();
+        
+        console.log(`Country news response for ${userLocation.country}:`, data); // Debug
+        
+        if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+            displayNews(countryNewsList, data.articles);
+        } else {
+            // Try alternative API if first one fails
+            await fetchAlternativeCountryNews();
+        }
+    } catch (error) {
+        console.error("Error fetching country news:", error);
+        await fetchAlternativeCountryNews();
+    }
+ }
+
+
+// Alternative country news source using GNews
+async function fetchAlternativeCountryNews() {
+    try {
+        const params = new URLSearchParams({
+            q: `"${userLocation.country}" politics`,
+            lang: 'en',
+            max: 5,
+            token: GNEWS_API_KEY,
+            country: userLocation.countryCode.toLowerCase()
+        });
+        
+        const response = await fetch(`${GNEWS_API_ENDPOINT}?${params}`);
+        const data = await response.json();
+        
+        console.log(`Alternative country news for ${userLocation.country}:`, data); // Debug
+        
+        if (data.articles && data.articles.length > 0) {
+            displayNews(countryNewsList, data.articles);
+        } else {
+            // If specifically India, try with additional keywords
+            if (userLocation.country === 'India') {
+                const indiaParams = new URLSearchParams({
+                    q: 'India politics BJP Congress Modi',
+                    lang: 'en',
+                    max: 5,
+                    token: GNEWS_API_KEY
+                });
+                
+                const indiaResponse = await fetch(`${GNEWS_API_ENDPOINT}?${indiaParams}`);
+                const indiaData = await indiaResponse.json();
+                
+                if (indiaData.articles && indiaData.articles.length > 0) {
+                    displayNews(countryNewsList, indiaData.articles);
+                    return;
+                }
+            }
+            
+            countryNewsList.innerHTML = `<div class="info-message">No recent political news found for ${userLocation.country}</div>`;
+        }
+    } catch (error) {
+        console.error("Error fetching alternative country news:", error);
+        countryNewsList.innerHTML = `<div class="error-message">Could not load news for ${userLocation.country}</div>`;
+    }
+}
+        
+        // Fetch state-specific political news
+        async function fetchStateNews() {
+            try {
+                stateNewsList.innerHTML = '<div class="loader">Loading state news...</div>';
+                
+                const params = new URLSearchParams({
+                    q: `(politics OR election OR government) AND ${userLocation.state}`,
+                    language: 'en',
+                    sortBy: 'publishedAt',
+                    pageSize: 5,
+                    apiKey: API_KEY
+                });
+                
+                const response = await fetch(`${NEWS_API_ENDPOINT}?${params}`);
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    displayNews(stateNewsList, data.articles);
+                } else {
+                    stateNewsList.innerHTML = `<div class="info-message">No recent political news for ${userLocation.state}</div>`;
+                }
+            } catch (error) {
+                console.error("Error fetching state news:", error);
+                stateNewsList.innerHTML = `<div class="error-message">Could not load news for ${userLocation.state}</div>`;
+            }
+        }
+        
+        // Fetch local-specific political news
+        async function fetchLocalNews() {
+            try {
+                localNewsList.innerHTML = '<div class="loader">Loading local news...</div>';
+                
+                const params = new URLSearchParams({
+                    q: `(politics OR election OR government) AND ${userLocation.city}`,
+                    language: 'en',
+                    sortBy: 'publishedAt',
+                    pageSize: 5,
+                    apiKey: API_KEY
+                });
+                
+                const response = await fetch(`${NEWS_API_ENDPOINT}?${params}`);
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    displayNews(localNewsList, data.articles);
+                } else {
+                    localNewsList.innerHTML = `<div class="info-message">No recent political news for ${userLocation.city}</div>`;
+                }
+            } catch (error) {
+                console.error("Error fetching local news:", error);
+                localNewsList.innerHTML = `<div class="error-message">Could not load news for ${userLocation.city}</div>`;
+            }
+        }
+        
+        // Display news articles in specified container
+        function displayNews(container, articles) {
+            container.innerHTML = '';
+            
+            articles.forEach(article => {
+                const li = document.createElement('li');
+                li.className = 'news-item';
+                
+                // Format the date
+                const publishedDate = new Date(article.publishedAt);
+                const formattedDate = publishedDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // Create article HTML
+                li.innerHTML = `
+                    <img src="${article.urlToImage || 'https://via.placeholder.com/100x80?text=No+Image'}" 
+                         alt="${article.title}" 
+                         class="news-image" 
+                         onerror="this.src='https://via.placeholder.com/100x80?text=No+Image'">
+                    <div class="news-content">
+                        <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                        <div class="news-source">${article.source.name || 'Unknown Source'}</div>
+                        <div class="news-date">${formattedDate}</div>
+                    </div>
+                `;
+                
+                container.appendChild(li);
+            });
+        }
+        
+        // Handle search functionality
+        function handleSearch(searchQuery) {
+            if (!searchQuery.trim()) return;
+            
+            // Update search history
+            userPreferences.searchHistory.unshift(searchQuery);
+            userPreferences.searchHistory = userPreferences.searchHistory.slice(0, 10); // Keep last 10 searches
+            
+            // Update search frequency
+            userPreferences.searchFrequency[searchQuery] = (userPreferences.searchFrequency[searchQuery] || 0) + 1;
+            
+            // Update last search date
+            userPreferences.lastSearchDate = new Date().toISOString();
+            
+            // Save updated preferences
+            saveUserPreferences();
+            
+            // Perform search
+            fetchSearchResults(searchQuery);
+        }
+        
+        // Fetch search results
+        async function fetchSearchResults(query) {
+            try {
+                // Update all containers with loading state
+                globalNewsList.innerHTML = '<div class="loader">Searching...</div>';
+                countryNewsList.innerHTML = '<div class="loader">Searching...</div>';
+                stateNewsList.innerHTML = '<div class="loader">Searching...</div>';
+                localNewsList.innerHTML = '<div class="loader">Searching...</div>';
+                
+                const params = new URLSearchParams({
+                    q: `${query} AND (politics OR election OR government)`,
+                    language: 'en',
+                    sortBy: 'publishedAt',
+                    pageSize: 20,
+                    apiKey: API_KEY
+                });
+                
+                const response = await fetch(`${NEWS_API_ENDPOINT}?${params}`);
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+                    // Filter results by location
+                    const allResults = data.articles;
+                    
+                    // Global results (all)
+                    const globalResults = allResults.slice(0, 5);
+                    
+                    // Country-specific results
+                    const countryResults = allResults.filter(article => 
+                        article.content && article.content.includes(userLocation.country)
+                    ).slice(0, 5);
+                    
+                    // State-specific results
+                    const stateResults = allResults.filter(article => 
+                        article.content && article.content.includes(userLocation.state)
+                    ).slice(0, 5);
+                    
+                    // Local-specific results
+                    const localResults = allResults.filter(article => 
+                        article.content && article.content.includes(userLocation.city)
+                    ).slice(0, 5);
+                    
+                    // Display results
+                    if (globalResults.length > 0) {
+                        displayNews(globalNewsList, globalResults);
+                    } else {
+                        globalNewsList.innerHTML = '<div class="info-message">No global results found</div>';
+                    }
+                    
+                    if (countryResults.length > 0) {
+                        displayNews(countryNewsList, countryResults);
+                    } else {
+                        countryNewsList.innerHTML = '<div class="info-message">No country results found</div>';
+                    }
+                    
+                    if (stateResults.length > 0) {
+                        displayNews(stateNewsList, stateResults);
+                    } else {
+                        stateNewsList.innerHTML = '<div class="info-message">No state results found</div>';
+                    }
+                    
+                    if (localResults.length > 0) {
+                        displayNews(localNewsList, localResults);
+                    } else {
+                        localNewsList.innerHTML = '<div class="info-message">No local results found</div>';
+                    }
+                } else {
+                    // No results found
+                    const noResultsMessage = '<div class="info-message">No results found for your search</div>';
+                    globalNewsList.innerHTML = noResultsMessage;
+                    countryNewsList.innerHTML = noResultsMessage;
+                    stateNewsList.innerHTML = noResultsMessage;
+                    localNewsList.innerHTML = noResultsMessage;
+                }
+            } catch (error) {
+                console.error("Error performing search:", error);
+                const errorMessage = '<div class="error-message">Error performing search</div>';
+                globalNewsList.innerHTML = errorMessage;
+                countryNewsList.innerHTML = errorMessage;
+                stateNewsList.innerHTML = errorMessage;
+                localNewsList.innerHTML = errorMessage;
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search box event listener
+            searchBox.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch(searchBox.value);
+                }
+            });
+            
+            // Category buttons event listeners
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Filter news based on category
+                    const category = button.dataset.category;
+                    filterNewsByCategory(category);
+                });
+            });
+        }
+        
+        // Filter news by category
+        function filterNewsByCategory(category) {
+            const allSections = document.querySelectorAll('.news-section');
+            
+            // Show all sections if category is 'all'
+            if (category === 'all') {
+                allSections.forEach(section => {
+                    section.style.display = 'block';
+                });
+                return;
+            }
+            
+            // Hide all sections first
+            allSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show only the selected category
+            const selectedSection = document.getElementById(`${category}-news`);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    
+    </script>
+</body>
+</html>
